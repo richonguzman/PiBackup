@@ -1,0 +1,17 @@
+body {
+    background: black;
+    color: white;
+}
+ 
+.button {
+  font: bold 24px Arial;
+  text-decoration: none;
+  background-color: #E74C3C;
+  color: #ECF0F1;
+  padding: 3px 5px 3px 5px;
+  border-top: 1px solid #FDFEFE;
+  border-right: 1px solid #FDFEFE;
+  border-bottom: 1px solid #FDFEFE;
+  border-left: 1px solid #FDFEFE;
+}
+

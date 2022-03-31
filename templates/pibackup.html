@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <font size = "6">
+        <title>{{ title }} PiBackup</title>
+        <link rel="stylesheet" href='../static/style.css'/&gt;
+        </font>
+    </head>    
+    <body>
+        <h1>PiBackup : (SD ---> SSD)</h1>
+        <a href="/" ><button class=grey style="height:70px;width:220px;font-size:48px">Home</button></a>
+        <br><br>
+        <br><br>
+        <form method="post" action="/pibackup/">
+            <input type="submit" style="height:70px;width:200px;font-size:48px" value="RAW" name="PBK_R"/>
+            <br><br>
+            <input type="submit" style="height:70px;width:200px;font-size:48px" value="JPG" name="PBK_J"/>
+            <br><br>
+            <input type="submit" style="height:70px;width:330px;font-size:48px" value="JPG+RAW" name="PBK_JR"/>
+            <br><br>
+            <input type="submit" style="height:70px;width:220px;font-size:48px" value="Video" name="PBK_V"/>
+            <br><br>
+            <input type="submit" style="height:70px;width:480px;font-size:48px" value="JPG+RAW+Video" name="PBK_JRV"/>
+        </form>
+    </body>
+</html>

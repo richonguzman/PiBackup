@@ -1,0 +1,18 @@
+***** PiBackup *****
+
+Source Disk  : disk
+Backup Disk  : RichonSSD
+
+Files to copy      : 8
+Size of Backup     : 0.224 GB
+Available Space    : 455.0 GB
+
+copying files...
+
+
+processing exif from files...
+
+(8 exif from files processed)
+(files separated by extension)
+
+End (Disk unmounted!)
