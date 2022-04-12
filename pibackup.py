@@ -1,273 +1,295 @@
 #!/usr/bin/env python3
 
+#----------------------------------------------------------#
+#                        PiBackup                          #
+#                                                          #
+# Backup (photography) files from your Camera SD-Card into #
+# your external SSD/HD with a Raspberry Pi 4               #
+#                                                          #
+# http://github.com/richonguzman/PiBackup                  #
+#                                                          #
+# Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
+#                                                          #
+#----------------------------------------------------------#
 
 import os, exiftool, shutil, psutil, time, sys
 from hashlib import blake2s
 import RPi.GPIO as GPIO
 
+led_pin = 16               # 3mm Red LED in series with 2k2 resistor connected to pin 16
 GPIO.setmode(GPIO.BOARD)
-GPIO.setup(16, GPIO.OUT)
+GPIO.setup(led_pin, GPIO.OUT)
 GPIO.setwarnings(False)
 
-wMAAiAgzyzME = '/media/pi/'
+path_mounted_disk = '/media/pi/'
 
-def DZFdeMBxAsqe():
-    while len(os.listdir(wMAAiAgzyzME)) == 0:
-        GPIO.output(16, False)
+def check_connected_disks():
+    while len(os.listdir(path_mounted_disk)) == 0:
+        GPIO.output(led_pin, False)
         time.sleep(0.5)
-        GPIO.output(16, True)
+        GPIO.output(led_pin, True)
         time.sleep(0.5)
-    JTnXaKTRqAmk = os.listdir(wMAAiAgzyzME)[0]
-    destino = wMAAiAgzyzME + JTnXaKTRqAmk
-    while len(os.listdir(wMAAiAgzyzME)) == 1:
-        GPIO.output(16, True)
+    destination_disk = os.listdir(path_mounted_disk)[0]
+    destination = path_mounted_disk + destination_disk
+    while len(os.listdir(path_mounted_disk)) == 1:
+        GPIO.output(led_pin, True)
         time.sleep(0.1)
-        GPIO.output(16, False)
+        GPIO.output(led_pin, False)
         time.sleep(0.1)
-    if JTnXaKTRqAmk == os.listdir(wMAAiAgzyzME)[0]:
-        itWUkLZSYtgi = os.listdir(wMAAiAgzyzME)[1]
+    if destination_disk == os.listdir(path_mounted_disk)[0]:
+        source_disk = os.listdir(path_mounted_disk)[1]
     else:
-        itWUkLZSYtgi = os.listdir(wMAAiAgzyzME)[0]
-    origen = wMAAiAgzyzME + itWUkLZSYtgi
-    destino = wMAAiAgzyzME + JTnXaKTRqAmk
-    if not os.path.isdir(destino + '/PiBackup/'):
-        os.mkdir(destino + '/PiBackup/')
+        source_disk = os.listdir(path_mounted_disk)[0]
+    source = path_mounted_disk + source_disk
+    destination = path_mounted_disk + destination_disk
+    if not os.path.isdir(destination + '/PiBackup/'):
+        os.mkdir(destination + '/PiBackup/')
         print("'PiBackup' folder created")
-    print("Source Disk  : " + itWUkLZSYtgi)
-    print("Backup Disk  : " + JTnXaKTRqAmk)
-    return origen, destino
+    print("Source Disk  : " + source_disk)
+    print("Backup Disk  : " + destination_disk)
+    return source, destination
 
-def yilyHcExNhch(origen, destino):
-    VveaUFUsgOSm = []
-    BsvcwWAbsCUf = []
-    pDeLEZWbOwww = []
-    RRoLoAKgalWm = []
+def creating_file_list(source_path, destination_path):
+    souce_files = []
+    souce_path_files = []
+    destination_files = []
+    destination_path_files = []
     time.sleep(0.2)
-    for D, SD, F in os.walk(origen):
+    for D, SD, F in os.walk(source_path):
         for file in F:
             if not file.endswith('DS_Store'):
-                VveaUFUsgOSm.append(file)
-                path_file = os.path.join(origen, D, file)
-                BsvcwWAbsCUf.append(path_file)
-    for D2, SD2, F2 in os.walk(destino):
+                souce_files.append(file)
+                path_1 = os.path.join(source_path, D, file)
+                souce_path_files.append(path_1)
+    for D2, SD2, F2 in os.walk(destination_path):
         for file2 in F2:
             if not file2.endswith('DS_Store'):
-                pDeLEZWbOwww.append(file2)
-                path_file2 = os.path.join(destino, D2, file2)
-                RRoLoAKgalWm.append(path_file2)
-    return VveaUFUsgOSm, BsvcwWAbsCUf, pDeLEZWbOwww, RRoLoAKgalWm
+                destination_files.append(file2)
+                path_2 = os.path.join(destination_path, D2, file2)
+                destination_path_files.append(path_2)
+    return souce_files, souce_path_files, destination_files, destination_path_files
 
-def UdAKmrztivjz(NaMnbtSMGexA):
+def get_hash(file_to_hash):
         m = blake2s(digest_size=32)
-        with open(NaMnbtSMGexA, 'rb') as fp:
+        with open(file_to_hash, 'rb') as fp:
             for chunk in fp:
                 m.update(chunk)
         return m.hexdigest()
 
-def UysvgxXAmkye(NWovQqEyeehU, YyvlUUgVnbkx, YSjSriqAVNxY, rmsNyEsmmeRy, destino):
-    hvfYVfgVpFsj = destino + '/PiBackup/'
-    GPIO.output(16, True)
-    EZQxjCZCbPqH = False
-    YbqHqHYPYihS = 0
-    BOjZVevymCZB = []
-    dNpgPbtbrvfQ = []
+def list_analysis(source_file_list, source_path_file_list, destination_file_list, destination_path_file_list, destination_disk):
+    path_destination_folder = destination_disk + '/PiBackup/'
+    GPIO.output(led_pin, True)
+    duplicated = False
+    total_weight = 0
+    files_to_copy_list = []
+    path_files_to_copy_list = []
     extension = []
-    tMccebhZWmOW = ('raf', 'RAF', 'crw', 'CRW', 'cr2', 'CR2', 'cr3', 'CR3', 'rw2', 'RW2', 'nef', 'NEF', 'nrw', 'NRW', 'orf', 'ORF', 'dng', 'DNG', 'ptx', 'PTX', 'pef', 'PEF', 'arw', 'ARW', 'srf', 'SRF', 'sr2', 'SR2', 'tiff', 'TIFF', 'thm', 'THM', 'fff', 'FFF', 'gpr', 'GPR')
-    hyMujndcnCDs = ('jpeg', 'JPEG', 'jpg', 'JPG', 'heic', 'HEIC', 'heif', 'HEIF')
-    YowPSkzxHdnf = ('hevc', 'HEVC', 'mkv', 'MKV', 'avi', 'AVI', 'mov', 'MOV', 'wmv', 'WMV', 'mp4', 'MP4', 'm4p', 'M4P', 'm4v', 'M4V', 'mpg', 'MPG', 'mpeg', 'MPEG', 'lrv', 'LRV')
+    jpg_extension = ('jpeg', 'JPEG', 'jpg', 'JPG', 'heic', 'HEIC', 'heif', 'HEIF')
+    raw_extension = ('raf', 'RAF', 'crw', 'CRW', 'cr2', 'CR2', 'cr3', 'CR3', 'rw2', 'RW2',
+                   'nef', 'NEF', 'nrw', 'NRW', 'orf', 'ORF', 'dng', 'DNG', 'ptx', 'PTX',
+                   'pef', 'PEF', 'arw', 'ARW', 'srf', 'SRF', 'sr2', 'SR2', 'tiff', 'TIFF',
+                   'thm', 'THM', 'fff', 'FFF', 'gpr', 'GPR')
+    video_extension = ('hevc', 'HEVC', 'mkv', 'MKV', 'avi', 'AVI', 'mov', 'MOV', 'wmv', 'WMV',
+                     'mp4', 'MP4', 'm4p', 'M4P', 'm4v', 'M4V', 'mpg', 'MPG', 'mpeg', 'MPEG',
+                     'lrv', 'LRV')
     if sys.argv[1] == 'j':
-        extension = hyMujndcnCDs
+        extension = jpg_extension
     elif sys.argv[1] == 'r':
-        extension = tMccebhZWmOW
+        extension = raw_extension
     elif sys.argv[1] == 'v':
-        extension = YowPSkzxHdnf
+        extension = video_extension
     elif sys.argv[1] == 'jr':
-        extension = hyMujndcnCDs + tMccebhZWmOW
+        extension = jpg_extension + raw_extension
     elif sys.argv[1] == 'jrv':
-        extension = hyMujndcnCDs + tMccebhZWmOW + YowPSkzxHdnf
-    for a in range(len(NWovQqEyeehU)):
-        EZQxjCZCbPqH = False
-        eEpRjWDtnDeN  = os.path.getsize(YyvlUUgVnbkx[a])
-        if NWovQqEyeehU[a].endswith((extension)):
-            bjQZtXaKgfTV, gByWmzDRWpsE = os.path.splitext(NWovQqEyeehU[a])
-            for b in range(len(YSjSriqAVNxY)):
-                if EZQxjCZCbPqH == False:
-                    if bjQZtXaKgfTV in YSjSriqAVNxY[b] and YSjSriqAVNxY[b].endswith(gByWmzDRWpsE):
-                        if NWovQqEyeehU[a] == YSjSriqAVNxY[b]:
-                            azHtmCiRMOeb = os.path.getsize(rmsNyEsmmeRy[b])
-                            if eEpRjWDtnDeN == azHtmCiRMOeb:
-                                EZQxjCZCbPqH = True
+        extension = jpg_extension + raw_extension + video_extension
+    for a in range(len(source_file_list)):
+        duplicated = False
+        source_file_size  = os.path.getsize(source_path_file_list[a])
+        if source_file_list[a].endswith((extension)):
+            file_name, file_extension = os.path.splitext(source_file_list[a])
+            for b in range(len(destination_file_list)):
+                if duplicated == False:
+                    if file_name in destination_file_list[b] and destination_file_list[b].endswith(file_extension):
+                        if source_file_list[a] == destination_file_list[b]:
+                            destination_file_size = os.path.getsize(destination_path_file_list[b])
+                            if source_file_size == destination_file_size:
+                                duplicated = True
                             else:
                                 n = 1
-                                KbHpyXAzLHVk = UdAKmrztivjz(YyvlUUgVnbkx[a])
-                                PlGouTmCMDmz, pLdQFITHSlQX = os.path.splitext(rmsNyEsmmeRy[b])
-                                while os.path.isfile(PlGouTmCMDmz[:-1] + str(n) + gByWmzDRWpsE):
-                                    path = os.path.join(PlGouTmCMDmz[:-1] + str(n) + pLdQFITHSlQX)
-                                    OziFlMFCGbUo = UdAKmrztivjz(path)
-                                    if KbHpyXAzLHVk == OziFlMFCGbUo:
-                                        EZQxjCZCbPqH = True
+                                hash_source_file = get_hash(source_path_file_list[a])
+                                destination_file_name, destination_file_extension = os.path.splitext(destination_path_file_list[b])
+                                while os.path.isfile(destination_file_name[:-1] + str(n) + file_extension):
+                                    path = os.path.join(destination_file_name[:-1] + str(n) + destination_file_extension)
+                                    hash_destination_file = get_hash(path)
+                                    if hash_source_file == hash_destination_file:
+                                        duplicated = True
                                     n += 1
                         else:
                             n = 1
-                            KbHpyXAzLHVk = UdAKmrztivjz(YyvlUUgVnbkx[a])
-                            PlGouTmCMDmz, pLdQFITHSlQX = os.path.splitext(rmsNyEsmmeRy[b])
-                            while os.path.isfile(PlGouTmCMDmz[:-1] + str(n) + gByWmzDRWpsE):
-                                path = os.path.join(PlGouTmCMDmz[:-1] + str(n) + pLdQFITHSlQX)
-                                OziFlMFCGbUo = UdAKmrztivjz(path)
-                                if KbHpyXAzLHVk == OziFlMFCGbUo:
-                                    EZQxjCZCbPqH = True
+                            hash_source_file = get_hash(source_path_file_list[a])
+                            destination_file_name, destination_file_extension = os.path.splitext(destination_path_file_list[b])
+                            while os.path.isfile(destination_file_name[:-1] + str(n) + file_extension):
+                                path = os.path.join(destination_file_name[:-1] + str(n) + destination_file_extension)
+                                hash_destination_file = get_hash(path)
+                                if hash_source_file == hash_destination_file:
+                                    duplicated = True
                                 n += 1
-            if not EZQxjCZCbPqH:
-                BOjZVevymCZB.append(NWovQqEyeehU[a])
-                dNpgPbtbrvfQ.append(YyvlUUgVnbkx[a])
-                YbqHqHYPYihS += eEpRjWDtnDeN
-    print('\nFiles to copy      : ' + str(len(BOjZVevymCZB)))
-    print('Size of Backup     : ' + str(round((YbqHqHYPYihS/1000000000),3)) + ' GB')
+            if not duplicated:
+                files_to_copy_list.append(source_file_list[a])
+                path_files_to_copy_list.append(source_path_file_list[a])
+                total_weight += source_file_size
+    print('\nFiles to copy      : ' + str(len(files_to_copy_list)))
+    print('Size of Backup     : ' + str(round((total_weight/1000000000),3)) + ' GB')
         
     partitions = psutil.disk_partitions()
     for partition in partitions:
         partition_usage = psutil.disk_usage(partition.mountpoint)
-        if partition.mountpoint == destino:
-            jJgBIeUATePB = partition_usage.free/1000000000
-            print('Available Space    : ' +str(round(jJgBIeUATePB,1)) + ' GB') 
-    if (YbqHqHYPYihS/1000000000) < jJgBIeUATePB:
-        return BOjZVevymCZB, dNpgPbtbrvfQ
+        if partition.mountpoint == destination_disk:
+            available_space = partition_usage.free/1000000000
+            print('Available Space    : ' +str(round(available_space,1)) + ' GB') 
+    if (total_weight/1000000000) < available_space:
+        return files_to_copy_list, path_files_to_copy_list
     else:
         print("\nNot enough space on 'Backup Disk' to make Backup !")
     
-def CYbBSxrfCBuR(HtaVsyPuNItp, DuVRhAAMEhiG, YSjSriqAVNxY , destino):
-    hvfYVfgVpFsj = destino + '/PiBackup/'
-    fQzGPNBDLfno = 0
-    HgbPkkZzMYMO = False
+def copying(files_copy, path_files_copy, destination_names , destination_disk):
+    path_destination_folder = destination_disk + '/PiBackup/'
+    led_counter = 0
+    n_process = False
     print('\ncopying files...\n')
-    for a in range(len(HtaVsyPuNItp)):
-        for b in range(len(YSjSriqAVNxY)):
-            if HtaVsyPuNItp[a] == YSjSriqAVNxY[b]:
-                HgbPkkZzMYMO = True
-        if HgbPkkZzMYMO:
+    for a in range(len(files_copy)):
+        for b in range(len(destination_names)):
+            if files_copy[a] == destination_names[b]:
+                n_process = True
+        if n_process:
             n = 1
-            bjQZtXaKgfTV,extension = os.path.splitext(HtaVsyPuNItp[a])
-            while (bjQZtXaKgfTV + "_" + str(n) + extension) in  YSjSriqAVNxY:
+            file_name, file_extension = os.path.splitext(files_copy[a])
+            while (file_name + "_" + str(n) + file_extension) in  destination_names:
                 n += 1
-            shutil.copy2(DuVRhAAMEhiG[a], hvfYVfgVpFsj + bjQZtXaKgfTV + "_" + str(n) + extension)
-            YSjSriqAVNxY.append(bjQZtXaKgfTV + "_" + str(n) + extension)
-            if fQzGPNBDLfno == 0:
-                GPIO.output(16, False)
+            shutil.copy2(path_files_copy[a], path_destination_folder + file_name + "_" + str(n) + file_extension)
+            destination_names.append(file_name + "_" + str(n) + file_extension)
+            if led_counter == 0:
+                GPIO.output(led_pin, False)
                 time.sleep(0.05)
-                fQzGPNBDLfno = 1
+                led_counter = 1
             else:
-                GPIO.output(16, True)
+                GPIO.output(led_pin, True)
                 time.sleep(0.05)
-                fQzGPNBDLfno = 0
+                led_counter = 0
         else:
-            shutil.copy2(DuVRhAAMEhiG[a], hvfYVfgVpFsj + HtaVsyPuNItp[a])
-            YSjSriqAVNxY.append(HtaVsyPuNItp[a])
-            if fQzGPNBDLfno == 0:
-                GPIO.output(16, False)
+            shutil.copy2(path_files_copy[a], path_destination_folder + files_copy[a])
+            destination_names.append(files_copy[a])
+            if led_counter == 0:
+                GPIO.output(led_pin, False)
                 time.sleep(0.05)
-                fQzGPNBDLfno = 1
+                led_counter = 1
             else:
-                GPIO.output(16, True)
+                GPIO.output(led_pin, True)
                 time.sleep(0.05)
-                fQzGPNBDLfno = 0
+                led_counter = 0
                 
-def ZeStZorYunQQ(destino):
-    GXbSJlnbVytb = destino + '/PiBackup/'
-    EdVwpRPABSnj = 0
-    fQzGPNBDLfno = 0
-    excludes = os.listdir(GXbSJlnbVytb)
-    for dirName, subdirList, fileList in os.walk(GXbSJlnbVytb):
+def sort_files_by_exif_data(destination):
+    path_folders_to_check = destination + '/PiBackup/'
+    exif_files_counter = 0
+    led_counter = 0
+    excludes = os.listdir(path_folders_to_check)
+    for dirName, subdirList, fileList in os.walk(path_folders_to_check):
         subdirList[:] = [d for d in subdirList if d not in excludes]
         if len(fileList) > 0:
-            print("\nprocessing exif from files...")
+            print("\nprocessing Exif Data from files...")
             for fname in fileList:
-                path = os.path.join(GXbSJlnbVytb, dirName, fname)
+                path_source_exif_file = os.path.join(path_folders_to_check, dirName, fname)
                 with exiftool.ExifToolHelper() as et:
-                    make = et.get_tags(path, 'Make')
-                    model = et.get_tags(path, 'Model')
-                    pfQUBuCqCBsC = make[0]['EXIF:Make']
-                    cnbFayrIbPgc = model[0]['EXIF:Model']
-                    if pfQUBuCqCBsC==None:
-                        fYayzeBoQXwo = GXbSJlnbVytb + 'other_files/'
-                        destino_nuevo = fYayzeBoQXwo + fname
-                        if not os.path.isdir(fYayzeBoQXwo):
-                            os.mkdir(fYayzeBoQXwo)
-                        shutil.move(path, destino_nuevo)
+                    make = et.get_tags(path_source_exif_file, 'Make')
+                    model = et.get_tags(path_source_exif_file, 'Model')
+                    camera_company = make[0]['EXIF:Make']
+                    camera_model = model[0]['EXIF:Model']
+                    if camera_company==None:
+                        new_folder = path_folders_to_check + 'other_files/'
+                        new_destination_path = new_folder + fname
+                        if not os.path.isdir(new_folder):
+                            os.mkdir(new_folder)
+                        shutil.move(path_source_exif_file, new_destination_path)
                     else:
-                        fYayzeBoQXwo = GXbSJlnbVytb + str(pfQUBuCqCBsC) + " " + str(cnbFayrIbPgc) + '/'
-                        destino_nuevo = fYayzeBoQXwo + fname
-                        if not os.path.isdir(fYayzeBoQXwo):
-                            os.mkdir(fYayzeBoQXwo)
-                        shutil.move(path, destino_nuevo)
-                    if fQzGPNBDLfno == 0:
-                        GPIO.output(16, False)
+                        new_folder = path_folders_to_check + str(camera_company) + " " + str(camera_model) + '/'
+                        new_destination_path = new_folder + fname
+                        if not os.path.isdir(new_folder):
+                            os.mkdir(new_folder)
+                        shutil.move(path_source_exif_file, new_destination_path)
+                    if led_counter == 0:
+                        GPIO.output(led_pin, False)
                         time.sleep(0.05)
-                        fQzGPNBDLfno = 1
+                        led_counter = 1
                     else:
-                        GPIO.output(16, True)
+                        GPIO.output(led_pin, True)
                         time.sleep(0.05)
-                        fQzGPNBDLfno = 0
-                EdVwpRPABSnj += 1
-        print("\n("+ str(EdVwpRPABSnj) + " exif from files processed)")
+                        led_counter = 0
+                exif_files_counter += 1
+        print("\n("+ str(exif_files_counter) + " EXIF Data from files processed)")
 
-def CevnMdEjRHAP(destino):
-    GXbSJlnbVytb = destino + '/PiBackup/'
-    DBiEYimuhzcB = 0
-    DdSCZbJpSoYV = 0
-    carpetas = os.listdir(GXbSJlnbVytb)
-    carpetas.sort()
-    for x in range(len(carpetas)):
-        OmntrszsLzLr = GXbSJlnbVytb + carpetas[x] + '/'
-        excludes = os.listdir(OmntrszsLzLr)
-        for D, sD, f in os.walk(OmntrszsLzLr):
+def separate_files_by_extension(destination):
+    path_folders_to_check = destination + '/PiBackup/'
+    jpg_extension = ('jpeg', 'JPEG', 'jpg', 'JPG', 'heic', 'HEIC', 'heif', 'HEIF')
+    raw_extension = ('raf', 'RAF', 'crw', 'CRW', 'cr2', 'CR2', 'cr3', 'CR3', 'rw2', 'RW2',
+                     'nef', 'NEF', 'nrw', 'NRW', 'orf', 'ORF', 'dng', 'DNG', 'ptx', 'PTX',
+                     'pef', 'PEF', 'arw', 'ARW', 'srf', 'SRF', 'sr2', 'SR2', 'tiff', 'TIFF',
+                     'thm', 'THM', 'fff', 'FFF', 'gpr', 'GPR')
+    jpg_counter = 0
+    raw_counter = 0
+    folders_to_check = os.listdir(path_folders_to_check)
+    folders_to_check.sort()
+    for x in range(len(folders_to_check)):
+        folder_being_checked = path_folders_to_check + folders_to_check[x] + '/'
+        excludes = os.listdir(folder_being_checked)
+        for D, sD, f in os.walk(folder_being_checked):
             sD[:] = [d for d in sD if d not in excludes]
             for file in f:
-                path = os.path.join(OmntrszsLzLr + file)
-                if file.endswith(('jpeg', 'JPEG', 'jpg', 'JPG', 'heic', 'HEIC', 'heif', 'HEIF')):
-                    if DBiEYimuhzcB == 0:
-                        APLzrTQIuILA = OmntrszsLzLr + 'JPG/'
-                        if not os.path.isdir(APLzrTQIuILA):
-                            os.mkdir(APLzrTQIuILA)
-                        DBiEYimuhzcB = 1
-                    shutil.move(path, APLzrTQIuILA + file)
-                if file.endswith(('raf', 'RAF', 'crw', 'CRW', 'cr2', 'CR2', 'cr3', 'CR3', 'rw2', 'RW2', 'nef', 'NEF', 'nrw', 'NRW', 'orf', 'ORF', 'dng', 'DNG', 'ptx', 'PTX', 'pef', 'PEF', 'arw', 'ARW', 'srf', 'SRF', 'sr2', 'SR2', 'tiff', 'TIFF', 'thm', 'THM', 'fff', 'FFF', 'gpr', 'GPR')):
-                    if DdSCZbJpSoYV == 0:
-                        YKpmLtQKQcMn = OmntrszsLzLr + 'RAW/'
-                        if not os.path.isdir(YKpmLtQKQcMn):
-                            os.mkdir(YKpmLtQKQcMn)
-                        DdSCZbJpSoYV = 1
-                    shutil.move(path, YKpmLtQKQcMn + file)
+                path = os.path.join(folder_being_checked + file)
+                if file.endswith((jpg_extension)):
+                    if jpg_counter == 0:
+                        path_jpg_folder = folder_being_checked + 'JPG/'
+                        if not os.path.isdir(path_jpg_folder):
+                            os.mkdir(path_jpg_folder)
+                        jpg_counter = 1
+                    shutil.move(path, path_jpg_folder + file)
+                if file.endswith((raw_extension)):
+                    if raw_counter == 0:
+                        path_raw_folder = folder_being_checked + 'RAW/'
+                        if not os.path.isdir(path_raw_folder):
+                            os.mkdir(path_raw_folder)
+                        raw_counter = 1
+                    shutil.move(path, path_raw_folder + file)
     print("(files separated by extension)")
     
 
-def eRMbMkhQgDZo(path_o, path_d):
-    CLGHTwVOSJdH = 0
-    while CLGHTwVOSJdH < 4:
-        GPIO.output(16, False)
+def finalize(path_source_dsk, path_destination_dsk):
+    counter = 0
+    while counter < 4:
+        GPIO.output(led_pin, False)
         time.sleep(0.8)
-        GPIO.output(16, True)
+        GPIO.output(led_pin, True)
         time.sleep(0.8)
-        CLGHTwVOSJdH += 1
+        counter += 1
     GPIO.cleanup()
-    cmd1 = 'sudo eject ' + path_o
-    cmd2 = 'sudo eject ' + path_d
-    os.system(cmd1)
-    os.system(cmd2)
+    command_1 = 'sudo eject ' + path_source_dsk
+    command_2 = 'sudo eject ' + path_destination_dsk
+    os.system(command_1)
+    os.system(command_2)
     print('\n' + "End (Disk unmounted!)")
     
-def lpgedgRvscuN():
+def start_pibackup():
     print("***** PiBackup *****" + '\n')
-    GLAzknYigBBj, scaMEaStcIXI = DZFdeMBxAsqe()
-    lista_nom_o, lista_p_o, lista_nom_d, lista_p_d = yilyHcExNhch(GLAzknYigBBj, scaMEaStcIXI)
-    NIVSdBFmxAAv, iryNaBvlWWyW = UysvgxXAmkye(lista_nom_o, lista_p_o, lista_nom_d, lista_p_d, scaMEaStcIXI)
-    if len(NIVSdBFmxAAv) == 0:
+    path_source_disk, path_destination_disk = check_connected_disks()
+    s_files, path_s_files, d_files, path_d_files = creating_file_list(path_source_disk, path_destination_disk)
+    files_to_copy, path_files_to_copy = list_analysis(s_files, path_s_files, d_files, path_d_files, path_destination_disk)
+    if len(files_to_copy) == 0:
         print("\nNo new files to backup")
     else:
-        CYbBSxrfCBuR(NIVSdBFmxAAv, iryNaBvlWWyW, lista_nom_d, scaMEaStcIXI)
-    ZeStZorYunQQ(scaMEaStcIXI)
-    CevnMdEjRHAP(scaMEaStcIXI)
-    eRMbMkhQgDZo(GLAzknYigBBj, scaMEaStcIXI)         
+        copying(files_to_copy, path_files_to_copy, d_files, path_destination_disk)
+    sort_files_by_exif_data(path_destination_disk)
+    separate_files_by_extension(path_destination_disk)
+    finalize(path_source_disk, path_destination_disk)         
     
     
 ####################################### PIBACKUP #######################################
-lpgedgRvscuN()
+start_pibackup()
