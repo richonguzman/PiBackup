@@ -62,7 +62,7 @@ def cleaning(path_cleaned):
                         os.remove(path_file_to_clean)
             all_folders_counter[x] = counter
             all_folders_weight[x] = round(folder_weight/1000000000,2)
-            print(str(all_folders_counter[x]) + " .JPG files deleted (" + str(all_folders_weight[x]) + " GB)")
+            print(str(all_folders_counter[x]) + " JPG files deleted (" + str(all_folders_weight[x]) + " GB)")
         else:
             print(path_clean_folder + " folder does not exists") 
     
