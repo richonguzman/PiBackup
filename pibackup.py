@@ -3,10 +3,10 @@
 #----------------------------------------------------------#
 #                        PiBackup                          #
 #                                                          #
-# Backup (photography) files from your Camera SD-Card into #
-# your external SSD/HD with a Raspberry Pi 4               #
+#   Backup (photography) files from your Camera SD-Card    #
+#   into your external SSD/HD with a Raspberry Pi 4        #
 #                                                          #
-# http://github.com/richonguzman/PiBackup                  #
+#   http://github.com/richonguzman/PiBackup                #
 #                                                          #
 # Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
 #                                                          #
