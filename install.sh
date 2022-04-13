@@ -1,4 +1,6 @@
 python3 /home/pi/PiBackup/conf/config.py
+sleep 1
+python3 /home/pi/PiBackup/conf/update_profile.py
 sleep 3
 sudo apt update
 sleep 1
@@ -31,5 +33,7 @@ sleep 1
 sudo rfkill unblock wlan
 sleep 1
 sudo cp /home/pi/PiBackup/conf/PBK_hostapd.conf /etc/hostapd/hostapd.conf
+sleep 1
+sudo cp /home/pi/PiBackup/conf/profile /etc/profile
 sleep 5
 sudo systemctl reboot
