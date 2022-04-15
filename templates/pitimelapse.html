@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <font size = "6">
+        <title>{{ title }} PiTimelapse</title>
+        <link rel="stylesheet" href='../static/style.css'/&gt;
+        </font>
+    </head>
+    <body>
+        <br><br>
+        <h1>PiTimelapse : (SD ---> SSD)</h1>
+        <a href="/" ><button class=grey style="height:70px;width:220px;font-size:48px">Home</button></a>
+        <br><br>
+        <br><br>
+        <form method="post" action="/pitimelapse/">
+            <input type="submit" style="height:70px;width:440px;font-size:48px" value="Timelapse RAW" name="T_R"/>
+            <br><br>
+            <input type="submit" style="height:70px;width:440px;font-size:48px" value="Timelapse JPG" name="T_J"/>
+            <br><br>
+            <input type="submit" style="height:70px;width:560px;font-size:48px" value="Timelapse JPG+RAW" name="T_JR"/>
+        </form>
+    </body>
+</html>

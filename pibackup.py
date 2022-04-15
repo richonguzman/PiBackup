@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 #----------------------------------------------------------#
-#                        PiBackup                          #
+#                     == PiBackup ==                       #
 #                                                          #
 #   Backup (photography) files from your Camera SD-Card    #
 #   into your external SSD/HD with a Raspberry Pi 4        #
 #                                                          #
-#   http://github.com/richonguzman/PiBackup                #
+#         http://github.com/richonguzman/PiBackup          #
 #                                                          #
 # Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
 #                                                          #
@@ -83,7 +83,6 @@ def list_analysis(source_file_list, source_path_file_list, destination_file_list
     total_weight = 0
     files_to_copy_list = []
     path_files_to_copy_list = []
-    extension = []
     jpg_extension = ('jpeg', 'JPEG', 'jpg', 'JPG', 'heic', 'HEIC', 'heif', 'HEIF')
     raw_extension = ('raf', 'RAF', 'crw', 'CRW', 'cr2', 'CR2', 'cr3', 'CR3', 'rw2', 'RW2',
                    'nef', 'NEF', 'nrw', 'NRW', 'orf', 'ORF', 'dng', 'DNG', 'ptx', 'PTX',
@@ -261,7 +260,6 @@ def separate_files_by_extension(destination):
                     shutil.move(path, path_raw_folder + file)
     print("(files separated by extension)")
     
-
 def finalize(path_source_dsk, path_destination_dsk):
     counter = 0
     while counter < 4:
@@ -288,8 +286,8 @@ def start_pibackup():
         copying(files_to_copy, path_files_to_copy, d_files, path_destination_disk)
     sort_files_by_exif_data(path_destination_disk)
     separate_files_by_extension(path_destination_disk)
-    finalize(path_source_disk, path_destination_disk)         
+    finalize(path_source_disk, path_destination_disk)
     
     
-####################################### PIBACKUP #######################################
+####################################### PiBackup #######################################
 start_pibackup()

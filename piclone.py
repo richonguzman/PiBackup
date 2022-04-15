@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 #----------------------------------------------------------#
-#                        PiClone                           #
+#                     == PiClone ==                        #
 #                                                          #
-#   Clone every file from 'PiBackup' or 'PiTimelapse'      #
-#   folder to your Backup SSD/HD to another SSD/HD         #
+#    Clone every file from 'PiBackup' or 'PiTimelapse'     #
+#    folder to your Backup SSD/HD to another SSD/HD        #
 #                                                          #
-#   http://github.com/richonguzman/PiBackup                #
+#        http://github.com/richonguzman/PiBackup           #
 #                                                          #
 # Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
 #                                                          #
@@ -91,5 +91,5 @@ def start_piclone():
     finalize(path_source_disk, path_destination_disk)
 
 
-####################################### PICLEAN #######################################
+####################################### PiClone #######################################
 start_piclone()

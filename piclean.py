@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 #----------------------------------------------------------#
-#                        PiClean                           #
+#                     == PiClean ==                        #
 #                                                          #
-#   Clean all '.JPG' files your PiBackup or PiTimelapse    #
-#   folder in your external SSD/HD                         #
+#  Clean(Delete) all JPG files in PiBackup or PiTimelapse  #
+#  folders in the external Backup SSD/HD                   #
 #                                                          #
-#   http://github.com/richonguzman/PiBackup                #
+#        http://github.com/richonguzman/PiBackup           #
 #                                                          #
 # Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
 #                                                          #
@@ -30,27 +30,26 @@ def check_connected_disks():
         time.sleep(0.5)
     disk_to_clean = os.listdir(path_mounted_disk)[0]
     path_disk_to_clean = path_mounted_disk + disk_to_clean
-    print("Disk to be Cleaned  : " + disk_to_clean)
+    print("Disk to be Cleaned  : " + disk_to_clean + '\n')
     return path_disk_to_clean
 
 def cleaning(path_cleaned):
     GPIO.output(led_pin, False)
-    folders = []
+    folders_to_clean = []
     if sys.argv[1] == 'bk':
-        folders.append('/PiBackup/')
+        folders_to_clean = ['/PiBackup/']
     elif sys.argv[1] == 'tm':
-        folders.append('/PiTimelapse/')
+        folders_to_clean = ['/PiTimelapse/']
     elif sys.argv[1] == 'bktm':
-        folders.append('/PiBackup/')
-        folders.append('/PiTimelapse/')
+        folders_to_clean = ['/PiBackup/', '/PiTimelapse/']
     else:
         print("Folders to be cleaned not in disk")
     all_folders_counter = [0,0]
     all_folders_weight = [0,0]
-    for x in range(len(folders)):
+    for x in range(len(folders_to_clean)):
         counter = 0
         folder_weight = 0
-        path_clean_folder = path_cleaned + folders[x]
+        path_clean_folder = path_cleaned + folders_to_clean[x]
         if os.path.isdir(path_clean_folder):
             for D, sD, F in os.walk(path_clean_folder):
                 for file in F:
@@ -86,5 +85,5 @@ def start_piclean():
     finalize(path_disk_to_be_cleaned)         
 
 
-####################################### PICLEAN #######################################
+####################################### PiClean #######################################
 start_piclean()

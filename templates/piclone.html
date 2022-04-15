@@ -1,0 +1,22 @@
+<html>
+    <head>
+        <font size = "6">
+        <title>{{ title }} PiClone</title>
+        <link rel="stylesheet" href='../static/style.css'/&gt;
+        </font>
+    </head>
+    <body>
+        <br><br>
+        <h1>PiClone : (SSD 1--->SSD 2)</h1>
+        <a href="/" ><button class=grey style="height:70px;width:220px;font-size:48px">Home</button></a>
+        <br><br>
+        <br><br>
+        <form method="post" action="/piclone/">
+            <input type="submit" style="height:70px;width:620px;font-size:48px" value="Clone 'PiBackup' folder" name="CLONE_BK"/>
+            <br><br>
+            <input type="submit" style="height:70px;width:680px;font-size:48px" value="Clone 'PiTimelapse' folder" name="CLONE_TM"/>
+            <br><br>
+            <input type="submit" style="height:70px;width:880px;font-size:48px" value="Clone 'PiBackup' and 'PiTimelapse'" name="CLONE_BKTM"/>
+        </form>
+    </body>
+</html>
