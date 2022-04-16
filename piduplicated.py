@@ -7,7 +7,7 @@
 #   'PiTimelapse' folder in the Backup SSD/HD and          #
 #   deletes or informs into '.log' file                    #
 #                                                          #
-#        http://github.com/richonguzman/PiBackup           #
+#        https://github.com/richonguzman/PiBackup          #
 #                                                          #
 # Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
 #                                                          #
@@ -31,7 +31,7 @@ def check_connected_disks():
         GPIO.output(led_pin, True)
         time.sleep(0.5)
     duplicate_analysis_disk = os.listdir(path_mounted_disk)[0]
-    path_duplicate_analysis_disk = path_mounted_disk + duplicate_analysis_disk
+    path_duplicate_analysis_disk = os.path.join(path_mounted_disk, duplicate_analysis_disk)
     print("Duplicated File Analysis on Disk : " + duplicate_analysis_disk + '\n')
     return path_duplicate_analysis_disk
 
@@ -43,17 +43,18 @@ def get_hash(archivo):
         return m.hexdigest()
 
 def check_for_log_file(path_ext_disk):
-    if os.path.isfile(path_ext_disk + '/duplicated_files.log'):
+    if os.path.isfile(os.path.join(path_ext_disk, 'duplicated_files.log')):
         n = 1
-        path_log = path_ext_disk + '/duplicated_files_' + str(n) + '.log'
-        while os.path.isfile(path_ext_disk + '/duplicated_files_' + str(n) + '.log'):
+        path_log = os.path.join(path_ext_disk, 'duplicated_files_' + str(n) + '.log')
+        while os.path.isfile(os.path.join(path_ext_disk, 'duplicated_files_' + str(n) + '.log')):
             n += 1
-            path_log = path_ext_disk + '/duplicated_files_' + str(n) + '.log'
+            path_log = os.path.join(path_ext_disk, 'duplicated_files_' + str(n) + '.log')
     else:
-        path_log = path_ext_disk + '/duplicated_files.log'
+        path_log = os.path.join(path_ext_disk, 'duplicated_files.log')
     return path_log
 
 def duplicated_analysis(path_disk):
+    time.sleep(1)
     duplicated = False
     if sys.argv[1] == 'log':
         path_log_file = check_for_log_file(path_disk)
@@ -100,23 +101,33 @@ def duplicated_analysis(path_disk):
             
 def finalize(path_ext_disk):
     counter = 0
+    GPIO.output(led_pin, False)
+    time.sleep(1)
     while counter < 4:
-        GPIO.output(led_pin, False)
-        time.sleep(0.8)
         GPIO.output(led_pin, True)
-        time.sleep(0.8)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.1)
+        GPIO.output(led_pin, True)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.1)
+        GPIO.output(led_pin, True)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.6)
         counter += 1
-    GPIO.cleanup()
+#     GPIO.cleanup()
     command = 'sudo eject ' + path_ext_disk
     os.system(command)
     print('\n' + "End (Disk unmounted!)")
             
-def start_piduplicate():
-    print("*** PiDuplicate ***" + '\n')
+def start_piduplicated():
+    print("*** PiDuplicated ***" + '\n')
     path_external_disk = check_connected_disks()
     duplicated_analysis(path_external_disk)
     finalize(path_external_disk)
 
 
 ####################################### PiDuplicated #######################################
-start_piduplicate()
+start_piduplicated()

@@ -6,7 +6,7 @@
 #   Backup (photography) files from your Camera SD-Card    #
 #   into your external SSD/HD with a Raspberry Pi 4        #
 #                                                          #
-#         http://github.com/richonguzman/PiBackup          #
+#        https://github.com/richonguzman/PiBackup          #
 #                                                          #
 # Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
 #                                                          #
@@ -30,7 +30,7 @@ def check_connected_disks():
         GPIO.output(led_pin, True)
         time.sleep(0.5)
     destination_disk = os.listdir(path_mounted_disk)[0]
-    destination = path_mounted_disk + destination_disk
+    destination = os.path.join(path_mounted_disk, destination_disk)
     while len(os.listdir(path_mounted_disk)) == 1:
         GPIO.output(led_pin, True)
         time.sleep(0.1)
@@ -40,57 +40,29 @@ def check_connected_disks():
         source_disk = os.listdir(path_mounted_disk)[1]
     else:
         source_disk = os.listdir(path_mounted_disk)[0]
-    source = path_mounted_disk + source_disk
-    destination = path_mounted_disk + destination_disk
-    if not os.path.isdir(destination + '/PiBackup/'):
-        os.mkdir(destination + '/PiBackup/')
+    source = os.path.join(path_mounted_disk, source_disk)
+    destination = os.path.join(path_mounted_disk, destination_disk, 'PiBackup')
+    if not os.path.isdir(destination):
+        os.mkdir(destination)
         print("'PiBackup' folder created")
     print("Source Disk  : " + source_disk)
     print("Backup Disk  : " + destination_disk)
     return source, destination
 
 def creating_file_list(source_path, destination_path):
+    time.sleep(1)
     souce_files = []
     souce_path_files = []
     destination_files = []
     destination_path_files = []
-    time.sleep(0.2)
-    for D, SD, F in os.walk(source_path):
-        for file in F:
-            if not file.endswith('DS_Store'):
-                souce_files.append(file)
-                path_1 = os.path.join(source_path, D, file)
-                souce_path_files.append(path_1)
-    for D2, SD2, F2 in os.walk(destination_path):
-        for file2 in F2:
-            if not file2.endswith('DS_Store'):
-                destination_files.append(file2)
-                path_2 = os.path.join(destination_path, D2, file2)
-                destination_path_files.append(path_2)
-    return souce_files, souce_path_files, destination_files, destination_path_files
-
-def get_hash(file_to_hash):
-        m = blake2s(digest_size=32)
-        with open(file_to_hash, 'rb') as fp:
-            for chunk in fp:
-                m.update(chunk)
-        return m.hexdigest()
-
-def list_analysis(source_file_list, source_path_file_list, destination_file_list, destination_path_file_list, destination_disk):
-    path_destination_folder = destination_disk + '/PiBackup/'
-    GPIO.output(led_pin, True)
-    duplicated = False
-    total_weight = 0
-    files_to_copy_list = []
-    path_files_to_copy_list = []
     jpg_extension = ('jpeg', 'JPEG', 'jpg', 'JPG', 'heic', 'HEIC', 'heif', 'HEIF')
-    raw_extension = ('raf', 'RAF', 'crw', 'CRW', 'cr2', 'CR2', 'cr3', 'CR3', 'rw2', 'RW2',
-                   'nef', 'NEF', 'nrw', 'NRW', 'orf', 'ORF', 'dng', 'DNG', 'ptx', 'PTX',
-                   'pef', 'PEF', 'arw', 'ARW', 'srf', 'SRF', 'sr2', 'SR2', 'tiff', 'TIFF',
-                   'thm', 'THM', 'fff', 'FFF', 'gpr', 'GPR')
-    video_extension = ('hevc', 'HEVC', 'mkv', 'MKV', 'avi', 'AVI', 'mov', 'MOV', 'wmv', 'WMV',
-                     'mp4', 'MP4', 'm4p', 'M4P', 'm4v', 'M4V', 'mpg', 'MPG', 'mpeg', 'MPEG',
-                     'lrv', 'LRV')
+    raw_extension = ('raf', 'RAF', 'crw', 'CRW', 'cr2', 'CR2', 'cr3', 'CR3', 'rw2',
+                     'RW2', 'nef', 'NEF', 'nrw', 'NRW', 'orf', 'ORF', 'dng', 'DNG',
+                     'ptx', 'PTX', 'pef', 'PEF', 'arw', 'ARW', 'srf', 'SRF', 'sr2',
+                     'SR2', 'tiff', 'TIFF', 'thm', 'THM', 'fff', 'FFF', 'gpr', 'GPR')
+    video_extension = ('hevc', 'HEVC', 'mkv', 'MKV', 'avi', 'AVI', 'mov', 'MOV', 'wmv',
+                       'WMV', 'mp4', 'MP4', 'm4p', 'M4P', 'm4v', 'M4V', 'mpg', 'MPG',
+                       'mpeg', 'MPEG', 'lrv', 'LRV')
     if sys.argv[1] == 'j':
         extension = jpg_extension
     elif sys.argv[1] == 'r':
@@ -101,28 +73,46 @@ def list_analysis(source_file_list, source_path_file_list, destination_file_list
         extension = jpg_extension + raw_extension
     elif sys.argv[1] == 'jrv':
         extension = jpg_extension + raw_extension + video_extension
+    for D, SD, F in os.walk(source_path):
+        for file in F:
+            if not file.endswith('DS_Store'):
+                if file.endswith((extension)):
+                    souce_files.append(file)
+                    path_1 = os.path.join(source_path, D, file)
+                    souce_path_files.append(path_1)
+    for D2, SD2, F2 in os.walk(destination_path):
+        for file2 in F2:
+            if not file2.endswith('DS_Store'):
+                if file2.endswith((extension)):
+                    destination_files.append(file2)
+                    path_2 = os.path.join(destination_path, D2, file2)
+                    destination_path_files.append(path_2)
+    return souce_files, souce_path_files, destination_files, destination_path_files
+
+def get_hash(file_to_hash):
+        m = blake2s(digest_size=32)
+        with open(file_to_hash, 'rb') as fp:
+            for chunk in fp:
+                m.update(chunk)
+        return m.hexdigest()
+
+def list_analysis(source_file_list, source_path_file_list, destination_file_list, destination_path_file_list, path_destination_folder):
+    GPIO.output(led_pin, True)
+    duplicated = False
+    total_weight = 0
+    files_to_copy_list = []
+    path_files_to_copy_list = []
     for a in range(len(source_file_list)):
         duplicated = False
-        source_file_size  = os.path.getsize(source_path_file_list[a])
-        if source_file_list[a].endswith((extension)):
-            file_name, file_extension = os.path.splitext(source_file_list[a])
-            for b in range(len(destination_file_list)):
-                if duplicated == False:
-                    if file_name in destination_file_list[b] and destination_file_list[b].endswith(file_extension):
-                        if source_file_list[a] == destination_file_list[b]:
-                            destination_file_size = os.path.getsize(destination_path_file_list[b])
-                            if source_file_size == destination_file_size:
-                                duplicated = True
-                            else:
-                                n = 1
-                                hash_source_file = get_hash(source_path_file_list[a])
-                                destination_file_name, destination_file_extension = os.path.splitext(destination_path_file_list[b])
-                                while os.path.isfile(destination_file_name[:-1] + str(n) + file_extension):
-                                    path = os.path.join(destination_file_name[:-1] + str(n) + destination_file_extension)
-                                    hash_destination_file = get_hash(path)
-                                    if hash_source_file == hash_destination_file:
-                                        duplicated = True
-                                    n += 1
+        file_name, file_extension = os.path.splitext(source_file_list[a])
+        for b in range(len(destination_file_list)):
+            if duplicated == False:
+                if file_name in destination_file_list[b] and destination_file_list[b].endswith(file_extension):
+                    if source_file_list[a] == destination_file_list[b]:
+                        source_file_size  = os.path.getsize(source_path_file_list[a])
+                        destination_file_size = os.path.getsize(destination_path_file_list[b])
+                        if source_file_size == destination_file_size:
+                            duplicated = True
                         else:
                             n = 1
                             hash_source_file = get_hash(source_path_file_list[a])
@@ -133,17 +123,27 @@ def list_analysis(source_file_list, source_path_file_list, destination_file_list
                                 if hash_source_file == hash_destination_file:
                                     duplicated = True
                                 n += 1
-            if not duplicated:
-                files_to_copy_list.append(source_file_list[a])
-                path_files_to_copy_list.append(source_path_file_list[a])
-                total_weight += source_file_size
+                    else:
+                        n = 1
+                        hash_source_file = get_hash(source_path_file_list[a])
+                        destination_file_name, destination_file_extension = os.path.splitext(destination_path_file_list[b])
+                        while os.path.isfile(destination_file_name[:-1] + str(n) + file_extension):
+                            path = os.path.join(destination_file_name[:-1] + str(n) + destination_file_extension)
+                            hash_destination_file = get_hash(path)
+                            if hash_source_file == hash_destination_file:
+                                duplicated = True
+                            n += 1
+        if not duplicated:
+            files_to_copy_list.append(source_file_list[a])
+            path_files_to_copy_list.append(source_path_file_list[a])
+            total_weight += os.path.getsize(source_path_file_list[a])
     print('\nFiles to copy      : ' + str(len(files_to_copy_list)))
     print('Size of Backup     : ' + str(round((total_weight/1000000000),3)) + ' GB')
         
     partitions = psutil.disk_partitions()
     for partition in partitions:
         partition_usage = psutil.disk_usage(partition.mountpoint)
-        if partition.mountpoint == destination_disk:
+        if partition.mountpoint == path_destination_folder.split('/PiBackup')[0]:
             available_space = partition_usage.free/1000000000
             print('Available Space    : ' +str(round(available_space,1)) + ' GB') 
     if (total_weight/1000000000) < available_space:
@@ -151,11 +151,10 @@ def list_analysis(source_file_list, source_path_file_list, destination_file_list
     else:
         print("\nNot enough space on 'Backup Disk' to make Backup !")
     
-def copying(files_copy, path_files_copy, destination_names , destination_disk):
-    path_destination_folder = destination_disk + '/PiBackup/'
+def copying(files_copy, path_files_copy, destination_names , path_destination_folder):
     led_counter = 0
     n_process = False
-    print('\ncopying files...\n')
+    print('\ncopying files...')
     for a in range(len(files_copy)):
         for b in range(len(destination_names)):
             if files_copy[a] == destination_names[b]:
@@ -165,7 +164,7 @@ def copying(files_copy, path_files_copy, destination_names , destination_disk):
             file_name, file_extension = os.path.splitext(files_copy[a])
             while (file_name + "_" + str(n) + file_extension) in  destination_names:
                 n += 1
-            shutil.copy2(path_files_copy[a], path_destination_folder + file_name + "_" + str(n) + file_extension)
+            shutil.copy2(path_files_copy[a], path_destination_folder + '/' + file_name + "_" + str(n) + file_extension)
             destination_names.append(file_name + "_" + str(n) + file_extension)
             if led_counter == 0:
                 GPIO.output(led_pin, False)
@@ -176,7 +175,7 @@ def copying(files_copy, path_files_copy, destination_names , destination_disk):
                 time.sleep(0.05)
                 led_counter = 0
         else:
-            shutil.copy2(path_files_copy[a], path_destination_folder + files_copy[a])
+            shutil.copy2(path_files_copy[a], path_destination_folder + '/' + files_copy[a])
             destination_names.append(files_copy[a])
             if led_counter == 0:
                 GPIO.output(led_pin, False)
@@ -187,8 +186,7 @@ def copying(files_copy, path_files_copy, destination_names , destination_disk):
                 time.sleep(0.05)
                 led_counter = 0
                 
-def sort_files_by_exif_data(destination):
-    path_folders_to_check = destination + '/PiBackup/'
+def sort_files_by_exif_data(path_folders_to_check):
     exif_files_counter = 0
     led_counter = 0
     excludes = os.listdir(path_folders_to_check)
@@ -204,14 +202,14 @@ def sort_files_by_exif_data(destination):
                     camera_company = make[0]['EXIF:Make']
                     camera_model = model[0]['EXIF:Model']
                     if camera_company==None:
-                        new_folder = path_folders_to_check + 'other_files/'
-                        new_destination_path = new_folder + fname
+                        new_folder = os.path.join(path_folders_to_check ,'other_files')
+                        new_destination_path = os.path.join(new_folder, fname)
                         if not os.path.isdir(new_folder):
                             os.mkdir(new_folder)
                         shutil.move(path_source_exif_file, new_destination_path)
                     else:
-                        new_folder = path_folders_to_check + str(camera_company) + " " + str(camera_model) + '/'
-                        new_destination_path = new_folder + fname
+                        new_folder = os.path.join(path_folders_to_check, str(camera_company) + " " + str(camera_model))
+                        new_destination_path = os.path.join(new_folder, fname)
                         if not os.path.isdir(new_folder):
                             os.mkdir(new_folder)
                         shutil.move(path_source_exif_file, new_destination_path)
@@ -224,10 +222,9 @@ def sort_files_by_exif_data(destination):
                         time.sleep(0.05)
                         led_counter = 0
                 exif_files_counter += 1
-        print("\n("+ str(exif_files_counter) + " EXIF Data from files processed)")
+        print("("+ str(exif_files_counter) + " EXIF Data from files processed)")
 
-def separate_files_by_extension(destination):
-    path_folders_to_check = destination + '/PiBackup/'
+def separate_files_by_extension(path_folders_to_check):
     jpg_extension = ('jpeg', 'JPEG', 'jpg', 'JPG', 'heic', 'HEIC', 'heif', 'HEIF')
     raw_extension = ('raf', 'RAF', 'crw', 'CRW', 'cr2', 'CR2', 'cr3', 'CR3', 'rw2', 'RW2',
                      'nef', 'NEF', 'nrw', 'NRW', 'orf', 'ORF', 'dng', 'DNG', 'ptx', 'PTX',
@@ -238,55 +235,66 @@ def separate_files_by_extension(destination):
     folders_to_check = os.listdir(path_folders_to_check)
     folders_to_check.sort()
     for x in range(len(folders_to_check)):
-        folder_being_checked = path_folders_to_check + folders_to_check[x] + '/'
+        folder_being_checked = os.path.join(path_folders_to_check, folders_to_check[x])
         excludes = os.listdir(folder_being_checked)
         for D, sD, f in os.walk(folder_being_checked):
             sD[:] = [d for d in sD if d not in excludes]
             for file in f:
-                path = os.path.join(folder_being_checked + file)
+                path = os.path.join(folder_being_checked, file)
                 if file.endswith((jpg_extension)):
                     if jpg_counter == 0:
-                        path_jpg_folder = folder_being_checked + 'JPG/'
+                        path_jpg_folder = os.path.join(folder_being_checked, 'JPG')
                         if not os.path.isdir(path_jpg_folder):
                             os.mkdir(path_jpg_folder)
                         jpg_counter = 1
-                    shutil.move(path, path_jpg_folder + file)
+                    shutil.move(path, os.path.join(path_jpg_folder, file))
                 if file.endswith((raw_extension)):
                     if raw_counter == 0:
-                        path_raw_folder = folder_being_checked + 'RAW/'
+                        path_raw_folder = os.path.join(folder_being_checked, 'RAW')
                         if not os.path.isdir(path_raw_folder):
                             os.mkdir(path_raw_folder)
                         raw_counter = 1
-                    shutil.move(path, path_raw_folder + file)
-    print("(files separated by extension)")
+                    shutil.move(path, os.path.join(path_raw_folder, file))
+    print("\n(files separated by extension)")
     
 def finalize(path_source_dsk, path_destination_dsk):
     counter = 0
+    GPIO.output(led_pin, False)
+    time.sleep(1)
     while counter < 4:
-        GPIO.output(led_pin, False)
-        time.sleep(0.8)
         GPIO.output(led_pin, True)
-        time.sleep(0.8)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.1)
+        GPIO.output(led_pin, True)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.1)
+        GPIO.output(led_pin, True)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.6)
         counter += 1
-    GPIO.cleanup()
+#     GPIO.cleanup()
     command_1 = 'sudo eject ' + path_source_dsk
-    command_2 = 'sudo eject ' + path_destination_dsk
+    command_2 = 'sudo eject ' + path_destination_dsk.split('/PiBackup')[0]
     os.system(command_1)
+    time.sleep(0.5)
     os.system(command_2)
-    print('\n' + "End (Disk unmounted!)")
+    print('\n' + "End (Disks unmounted!)")
     
 def start_pibackup():
     print("***** PiBackup *****" + '\n')
-    path_source_disk, path_destination_disk = check_connected_disks()
+    path_source_disk, path_destination_disk = check_connected_disks()    
     s_files, path_s_files, d_files, path_d_files = creating_file_list(path_source_disk, path_destination_disk)
     files_to_copy, path_files_to_copy = list_analysis(s_files, path_s_files, d_files, path_d_files, path_destination_disk)
     if len(files_to_copy) == 0:
         print("\nNo new files to backup")
     else:
         copying(files_to_copy, path_files_to_copy, d_files, path_destination_disk)
-    sort_files_by_exif_data(path_destination_disk)
-    separate_files_by_extension(path_destination_disk)
-    finalize(path_source_disk, path_destination_disk)
+        sort_files_by_exif_data(path_destination_disk)
+        separate_files_by_extension(path_destination_disk)
+        finalize(path_source_disk, path_destination_disk)
     
     
 ####################################### PiBackup #######################################

@@ -11,7 +11,7 @@
 # - Analyze and Delete (optional) all duplicated files     #
 # - Sort/Rename Timelapse files for importing ease         #
 #                                                          #
-#        http://github.com/richonguzman/PiBackup           #
+#       https://github.com/richonguzman/PiBackup           #
 #                                                          #
 # Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
 #                                                          #
@@ -41,6 +41,7 @@ def shut_down():
 def welcome_home():
     templateData = {      'title' : 'Richon -',      }
     print("Home")
+    GPIO.output(16, True)
     if request.method == 'POST':
         if request.form.get('Turn RP OFF') == 'Turn RP OFF':
             print("Turning RP OFF...")

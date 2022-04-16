@@ -6,7 +6,7 @@
 #  Clean(Delete) all JPG files in PiBackup or PiTimelapse  #
 #  folders in the external Backup SSD/HD                   #
 #                                                          #
-#        http://github.com/richonguzman/PiBackup           #
+#        https://github.com/richonguzman/PiBackup          #
 #                                                          #
 # Copyright (C) 2022 Ricardo Guzman richonguzman@gmail.com #
 #                                                          #
@@ -29,19 +29,20 @@ def check_connected_disks():
         GPIO.output(led_pin, True)
         time.sleep(0.5)
     disk_to_clean = os.listdir(path_mounted_disk)[0]
-    path_disk_to_clean = path_mounted_disk + disk_to_clean
+    path_disk_to_clean = os.path.join(path_mounted_disk, disk_to_clean)
     print("Disk to be Cleaned  : " + disk_to_clean + '\n')
     return path_disk_to_clean
 
 def cleaning(path_cleaned):
+    time.sleep(1)
     GPIO.output(led_pin, False)
     folders_to_clean = []
     if sys.argv[1] == 'bk':
-        folders_to_clean = ['/PiBackup/']
+        folders_to_clean = ['PiBackup']
     elif sys.argv[1] == 'tm':
-        folders_to_clean = ['/PiTimelapse/']
+        folders_to_clean = ['PiTimelapse']
     elif sys.argv[1] == 'bktm':
-        folders_to_clean = ['/PiBackup/', '/PiTimelapse/']
+        folders_to_clean = ['PiBackup', 'PiTimelapse']
     else:
         print("Folders to be cleaned not in disk")
     all_folders_counter = [0,0]
@@ -49,7 +50,7 @@ def cleaning(path_cleaned):
     for x in range(len(folders_to_clean)):
         counter = 0
         folder_weight = 0
-        path_clean_folder = path_cleaned + folders_to_clean[x]
+        path_clean_folder = os.path.join(path_cleaned, folders_to_clean[x])
         if os.path.isdir(path_clean_folder):
             for D, sD, F in os.walk(path_clean_folder):
                 for file in F:
@@ -67,13 +68,23 @@ def cleaning(path_cleaned):
     
 def finalize(path_clean_disk):
     counter = 0
+    GPIO.output(led_pin, False)
+    time.sleep(1)
     while counter < 4:
-        GPIO.output(led_pin, False)
-        time.sleep(0.8)
         GPIO.output(led_pin, True)
-        time.sleep(0.8)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.1)
+        GPIO.output(led_pin, True)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.1)
+        GPIO.output(led_pin, True)
+        time.sleep(0.1)
+        GPIO.output(led_pin, False)
+        time.sleep(0.6)
         counter += 1
-    GPIO.cleanup()
+#     GPIO.cleanup()
     command = 'sudo eject ' + path_clean_disk
     os.system(command)
     print('\n' + "End (Disk unmounted!)")
