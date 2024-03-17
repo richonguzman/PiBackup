@@ -68,14 +68,12 @@ def check_disks():
 @app.route('/list_files_to_copy/<file_type>')
 def list_files_to_copy_route(file_type):
     files_to_copy = list_files_to_copy(file_type=file_type)
-    # Start the table and include headers
-    files_to_copy_str = "<table><tr><th>File Name</th><th>Extension</th><th>Date Modified</th></tr>"
-    # Add a row for each file
+    files_to_copy_str = "<table>"
+    files_to_copy_str += "<tr><th>File Name</th><th>Extension</th><th>Date Modified</th></tr>"
     for file in files_to_copy:
         files_to_copy_str += f"<tr><td>{file['name']}</td><td>{file['extension']}</td><td>{file['date_modified']}</td></tr>"
     files_to_copy_str += "</table>"
     return files_to_copy_str
-
 
 @app.route("/pibackup/", methods=['GET', 'POST'])
 def pi_backup():

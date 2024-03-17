@@ -76,7 +76,7 @@
             fetch(`/list_files_to_copy/${fileType}`).then(function(response) {
                 return response.text();
             }).then(function(text) {
-                document.getElementById('backup-output').textContent += text;
+                document.getElementById('backup-output').innerHTML = text;
             });
         }
         function clearOutput() {
