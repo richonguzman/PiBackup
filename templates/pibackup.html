@@ -32,22 +32,24 @@
         <br><br>
         <input type="submit" style="height:70px;width:480px;font-size:48px" value="JPG+RAW+Video" name="PBK_JRV"/>
         <br><br>
-        <button type="submit" style="height:70px;width:480px;font-size:48px" onclick="checkDisks()">Check Disks</button>
+        <button type="button" style="height:70px;width:480px;font-size:48px" onclick="checkDisks(event)">Check Disks</button>
         <br><br>
-        <button type="submit" style="height:70px;width:580px;font-size:48px" onclick="listFilesToCopy()">List Files to Copy</button>
+        <button type="button" style="height:70px;width:580px;font-size:48px" onclick="listFilesToCopy(event)">List Files to Copy</button>
     </form>
     <br><br>
     <pre id="backup-output" style="white-space: pre-wrap;"></pre>
 
     <script type="text/javascript">
-        function checkDisks() {
+        function checkDisks(event) {
+            event.preventDefault();
             fetch('/check_disks').then(function(response) {
                 return response.text();
             }).then(function(text) {
                 document.getElementById('backup-output').textContent += text;
             });
         }
-        function listFilesToCopy() {
+        function listFilesToCopy(event) {
+            event.preventDefault();
             fetch('/list_files_to_copy').then(function(response) {
                  return response.text();
             }).then(function(text) {
