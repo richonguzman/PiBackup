@@ -162,7 +162,7 @@ def list_files_to_copy(file_type):
             'extension': os.path.splitext(source_path_file)[1],
             'date_modified': time.ctime(os.path.getmtime(source_path_file))
         }
-        if file_info['name'] not in destination_files or os.path.getsize(source_path_file) != os.path.getsize(os.path.join(destination_path, file_info['name'])):
+        if file_info['name'] not in destination_files or os.path.getsize(source_path_file) != os.path.getsize(os.path.join(destination, file_info['name'])):
             files_to_copy.append(file_info)
     
     return files_to_copy
