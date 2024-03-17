@@ -20,8 +20,8 @@
     <a href="/" ><button class=grey style="height:70px;width:220px;font-size:48px">Home</button></a>
     <br><br>
     <br><br>
+    <!-- Main form for backup operations -->
     <form method="post" action="/pibackup/">
-        <!-- Existing buttons -->
         <input type="submit" style="height:70px;width:200px;font-size:48px" value="RAW" name="PBK_R"/>
         <br><br>
         <input type="submit" style="height:70px;width:200px;font-size:48px" value="JPG" name="PBK_J"/>
@@ -31,11 +31,33 @@
         <input type="submit" style="height:70px;width:220px;font-size:48px" value="Video" name="PBK_V"/>
         <br><br>
         <input type="submit" style="height:70px;width:480px;font-size:48px" value="JPG+RAW+Video" name="PBK_JRV"/>
-        <br><br>
-        <button type="button" style="height:70px;width:480px;font-size:48px" onclick="checkDisks(event)">Check Disks</button>
-        <br><br>
-        <button type="button" style="height:70px;width:580px;font-size:48px" onclick="listFilesToCopy(event)">List Files to Copy</button>
     </form>
+
+    <!-- File type selection for listing files -->
+    <div>
+        <input type="radio" id="list_jpg" name="list_type" value="j">
+        <label for="list_jpg">JPG</label><br>
+
+        <input type="radio" id="list_raw" name="list_type" value="r">
+        <label for="list_raw">RAW</label><br>
+
+        <input type="radio" id="list_jpg_raw" name="list_type" value="jr" checked>
+        <label for="list_jpg_raw">JPG + RAW</label><br>
+
+        <input type="radio" id="list_video" name="list_type" value="v">
+        <label for="list_video">Video</label><br>
+
+        <input type="radio" id="list_all" name="list_type" value="jrv">
+        <label for="list_all">JPG + RAW + Video</label><br>
+    </div>
+
+    <!-- Buttons for additional actions -->
+    <button type="button" style="height:70px;width:480px;font-size:48px" onclick="checkDisks(event)">Check Disks</button>
+    <br><br>
+    <button type="button" style="height:70px;width:580px;font-size:48px" onclick="listFilesToCopy(event)">List Files to Copy</button>
+    <br><br>
+    <button type="button" style="height:70px;width:220px;font-size:48px" onclick="clearOutput()">Clear</button>
+
     <br><br>
     <pre id="backup-output" style="white-space: pre-wrap;"></pre>
 
@@ -50,11 +72,15 @@
         }
         function listFilesToCopy(event) {
             event.preventDefault();
-            fetch('/list_files_to_copy').then(function(response) {
-                 return response.text();
+            let fileType = document.querySelector('input[name="list_type"]:checked').value;
+            fetch(`/list_files_to_copy/${fileType}`).then(function(response) {
+                return response.text();
             }).then(function(text) {
                 document.getElementById('backup-output').textContent += text;
             });
+        }
+        function clearOutput() {
+            document.getElementById('backup-output').textContent = '';
         }
     </script>
 </body>

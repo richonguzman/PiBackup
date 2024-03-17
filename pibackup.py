@@ -49,7 +49,7 @@ def check_connected_disks():
     print("Backup Disk  : " + destination_disk)
     return source, destination
 
-def creating_file_list(source_path, destination_path):
+def creating_file_list(source_path, destination_path, file_type):
     time.sleep(1)
     souce_files = []
     souce_path_files = []
@@ -63,15 +63,15 @@ def creating_file_list(source_path, destination_path):
     video_extension = ('hevc', 'HEVC', 'mkv', 'MKV', 'avi', 'AVI', 'mov', 'MOV', 'wmv',
                        'WMV', 'mp4', 'MP4', 'm4p', 'M4P', 'm4v', 'M4V', 'mpg', 'MPG',
                        'mpeg', 'MPEG', 'lrv', 'LRV', '360', 'insv', 'INSV')
-    if sys.argv[1] == 'j':
+    if file_type == 'j':
         extension = jpg_extension
-    elif sys.argv[1] == 'r':
+    elif file_type == 'r':
         extension = raw_extension
-    elif sys.argv[1] == 'v':
+    elif file_type == 'v':
         extension = video_extension
-    elif sys.argv[1] == 'jr':
+    elif file_type == 'jr':
         extension = jpg_extension + raw_extension
-    elif sys.argv[1] == 'jrv':
+    elif file_type == 'jrv':
         extension = jpg_extension + raw_extension + video_extension
     for D, SD, F in os.walk(source_path):
         for file in F:
@@ -151,9 +151,9 @@ def list_analysis(source_file_list, source_path_file_list, destination_file_list
     else:
         print("\nNot enough space on 'Backup Disk' to make Backup !")
 
-def list_files_to_copy():
+def list_files_to_copy(file_type):
     source, destination = check_connected_disks()
-    source_files, source_path_files, destination_files, destination_path_files = creating_file_list(source, destination)
+    source_files, source_path_files, destination_files, destination_path_files = creating_file_list(source, destination, file_type)
     
     files_to_copy = []
     for source_file, source_path_file in zip(source_files, source_path_files):
@@ -307,7 +307,7 @@ def finalize(path_source_dsk, path_destination_dsk):
 def start_pibackup():
     print("***** PiBackup *****" + '\n')
     path_source_disk, path_destination_disk = check_connected_disks()    
-    s_files, path_s_files, d_files, path_d_files = creating_file_list(path_source_disk, path_destination_disk)
+    s_files, path_s_files, d_files, path_d_files = creating_file_list(path_source_disk, path_destination_disk, sys.argv[1])
     files_to_copy, path_files_to_copy, total_files_to_copy = list_analysis(s_files, path_s_files, d_files, path_d_files, path_destination_disk)
     if len(files_to_copy) == 0:
         print("\nNo new files to backup")

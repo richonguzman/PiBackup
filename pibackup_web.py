@@ -65,9 +65,9 @@ def check_disks():
     source_disk, destination_disk = check_connected_disks()
     return f"Source Disk: {source_disk}\nBackup Disk: {destination_disk}"
 
-@app.route('/list_files_to_copy')
-def list_files_to_copy_route():
-    files_to_copy = list_files_to_copy()
+@app.route('/list_files_to_copy/<file_type>')
+def list_files_to_copy_route(file_type):
+    files_to_copy = list_files_to_copy(file_type=file_type)
     files_to_copy_str = "<br>".join([f"{file['name']} - {file['extension']} - {file['date_modified']}" for file in files_to_copy])
     return files_to_copy_str
 
