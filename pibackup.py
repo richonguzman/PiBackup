@@ -157,14 +157,18 @@ def list_files_to_copy(file_type):
     
     files_to_copy = []
     for source_file, source_path_file in zip(source_files, source_path_files):
+        file_name, file_extension = os.path.splitext(os.path.basename(source_path_file))
         file_info = {
-            'name': os.path.basename(source_path_file),
-            'extension': os.path.splitext(source_path_file)[1],
+            'name': file_name,
+            'extension': file_extension,
             'date_modified': time.ctime(os.path.getmtime(source_path_file))
         }
-        if file_info['name'] not in destination_files or os.path.getsize(source_path_file) != os.path.getsize(os.path.join(destination, file_info['name'])):
+        if file_info['name'] + file_info['extension'] not in destination_files or os.path.getsize(source_path_file) != os.path.getsize(os.path.join(destination, file_info['name'] + file_info['extension'])):
             files_to_copy.append(file_info)
-    
+
+    # Sort the files by date_modified
+    files_to_copy.sort(key=lambda x: x['date_modified'], reverse=True)
+
     return files_to_copy
 
 def copying(files_copy, path_files_copy, destination_names, path_destination_folder, total_files):
