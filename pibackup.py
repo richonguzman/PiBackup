@@ -150,7 +150,23 @@ def list_analysis(source_file_list, source_path_file_list, destination_file_list
         return files_to_copy_list, path_files_to_copy_list, len(files_to_copy_list)
     else:
         print("\nNot enough space on 'Backup Disk' to make Backup !")
+
+def list_files_to_copy():
+    source, destination = check_connected_disks()
+    source_files, source_path_files, destination_files, destination_path_files = creating_file_list(source, destination)
     
+    files_to_copy = []
+    for source_file, source_path_file in zip(source_files, source_path_files):
+        file_info = {
+            'name': os.path.basename(source_path_file),
+            'extension': os.path.splitext(source_path_file)[1],
+            'date_modified': time.ctime(os.path.getmtime(source_path_file))
+        }
+        if file_info['name'] not in destination_files or os.path.getsize(source_path_file) != os.path.getsize(os.path.join(destination_path, file_info['name'])):
+            files_to_copy.append(file_info)
+    
+    return files_to_copy
+
 def copying(files_copy, path_files_copy, destination_names, path_destination_folder, total_files):
     led_counter = 0
     print('\nCopying files...')
@@ -303,4 +319,5 @@ def start_pibackup():
     
     
 ####################################### PiBackup #######################################
-start_pibackup()
+if __name__ == "__main__":
+    start_pibackup()

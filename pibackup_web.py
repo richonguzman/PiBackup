@@ -24,6 +24,8 @@ from hashlib import blake2s
 from datetime import datetime
 import RPi.GPIO as GPIO
 import exiftool, os, shutil, subprocess, sys, time, glob
+from pibackup import check_connected_disks
+from pibackup import list_files_to_copy
 
 led_pin = 16               # 3mm Red LED in series with 2k2 resistor connected to pin 16
 GPIO.setmode(GPIO.BOARD)
@@ -65,8 +67,7 @@ def check_disks():
 
 @app.route('/list_files_to_copy')
 def list_files_to_copy_route():
-    # You'll need to define the paths appropriately
-    files_to_copy = list_files_to_copy(source_path, destination_path)
+    files_to_copy = list_files_to_copy()
     files_to_copy_str = "<br>".join([f"{file['name']} - {file['extension']} - {file['date_modified']}" for file in files_to_copy])
     return files_to_copy_str
 
