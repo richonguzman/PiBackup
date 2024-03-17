@@ -1,26 +1,59 @@
 <html>
-    <head>
-        <font size = "6">
-        <title>{{ title }} PiBackup</title>
-        <link rel="stylesheet" href='../static/style.css'/&gt;
-        </font>
-    </head>    
-    <body>
+<head>
+    <font size = "6">
+    <title>{{ title }} PiBackup</title>
+    <link rel="stylesheet" href='../static/style.css'/>
+    </font>
+    <script type="text/javascript">
+        var eventSource = new EventSource("/pibackup_stream");
+
+        eventSource.onmessage = function(event) {
+            var backupOutputElement = document.getElementById("backup-output");
+            backupOutputElement.textContent += event.data + '\n';
+            backupOutputElement.scrollTop = backupOutputElement.scrollHeight;
+        };
+    </script>
+</head>    
+<body>
+    <br><br>
+    <h1>PiBackup : (SD ---> SSD)</h1>
+    <a href="/" ><button class=grey style="height:70px;width:220px;font-size:48px">Home</button></a>
+    <br><br>
+    <br><br>
+    <form method="post" action="/pibackup/">
+        <!-- Existing buttons -->
+        <input type="submit" style="height:70px;width:200px;font-size:48px" value="RAW" name="PBK_R"/>
         <br><br>
-        <h1>PiBackup : (SD ---> SSD)</h1>
-        <a href="/" ><button class=grey style="height:70px;width:220px;font-size:48px">Home</button></a>
+        <input type="submit" style="height:70px;width:200px;font-size:48px" value="JPG" name="PBK_J"/>
         <br><br>
+        <input type="submit" style="height:70px;width:330px;font-size:48px" value="JPG+RAW" name="PBK_JR"/>
         <br><br>
-        <form method="post" action="/pibackup/">
-            <input type="submit" style="height:70px;width:200px;font-size:48px" value="RAW" name="PBK_R"/>
-            <br><br>
-            <input type="submit" style="height:70px;width:200px;font-size:48px" value="JPG" name="PBK_J"/>
-            <br><br>
-            <input type="submit" style="height:70px;width:330px;font-size:48px" value="JPG+RAW" name="PBK_JR"/>
-            <br><br>
-            <input type="submit" style="height:70px;width:220px;font-size:48px" value="Video" name="PBK_V"/>
-            <br><br>
-            <input type="submit" style="height:70px;width:480px;font-size:48px" value="JPG+RAW+Video" name="PBK_JRV"/>
-        </form>
-    </body>
+        <input type="submit" style="height:70px;width:220px;font-size:48px" value="Video" name="PBK_V"/>
+        <br><br>
+        <input type="submit" style="height:70px;width:480px;font-size:48px" value="JPG+RAW+Video" name="PBK_JRV"/>
+        <br><br>
+        <button type="button" style="height:70px;width:330px;font-size:48px" onclick="checkDisks()">Check Disks</button>
+        <br><br>
+        <button type="button" style="height:70px;width:330px;font-size:48px" onclick="listFilesToCopy()">List Files to Copy</button>
+    </form>
+    <br><br>
+    <pre id="backup-output" style="white-space: pre-wrap;"></pre>
+
+    <script type="text/javascript">
+        function checkDisks() {
+            fetch('/check_disks').then(function(response) {
+                return response.text();
+            }).then(function(text) {
+                document.getElementById('backup-output').textContent += text;
+            });
+        }
+        function listFilesToCopy() {
+            fetch('/list_files_to_copy').then(function(response) {
+                 return response.text();
+            }).then(function(text) {
+                document.getElementById('backup-output').textContent += text;
+            });
+        }
+    </script>
+</body>
 </html>

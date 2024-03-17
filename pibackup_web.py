@@ -48,7 +48,28 @@ def welcome_home():
             shut_down()
     return render_template('home.html', **templateData)
     
-    
+def generate_backup_output(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    for line in iter(process.stdout.readline, ''):
+        yield f"data: {line}\n\n"
+
+@app.route('/pibackup_stream')
+def pibackup_stream():
+    command = [sys.executable, '/home/pi/PiBackup/pibackup.py', 's']
+    return Response(generate_backup_output(command), mimetype='text/event-stream')
+
+@app.route('/check_disks')
+def check_disks():
+    source_disk, destination_disk = check_connected_disks()
+    return f"Source Disk: {source_disk}\nBackup Disk: {destination_disk}"
+
+@app.route('/list_files_to_copy')
+def list_files_to_copy_route():
+    # You'll need to define the paths appropriately
+    files_to_copy = list_files_to_copy(source_path, destination_path)
+    files_to_copy_str = "<br>".join([f"{file['name']} - {file['extension']} - {file['date_modified']}" for file in files_to_copy])
+    return files_to_copy_str
+
 @app.route("/pibackup/", methods=['GET', 'POST'])
 def pi_backup():
     templateData = {      'title' : 'Richon -',      }

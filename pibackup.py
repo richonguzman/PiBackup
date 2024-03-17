@@ -62,7 +62,7 @@ def creating_file_list(source_path, destination_path):
                      'SR2', 'tiff', 'TIFF', 'thm', 'THM', 'fff', 'FFF', 'gpr', 'GPR')
     video_extension = ('hevc', 'HEVC', 'mkv', 'MKV', 'avi', 'AVI', 'mov', 'MOV', 'wmv',
                        'WMV', 'mp4', 'MP4', 'm4p', 'M4P', 'm4v', 'M4V', 'mpg', 'MPG',
-                       'mpeg', 'MPEG', 'lrv', 'LRV')
+                       'mpeg', 'MPEG', 'lrv', 'LRV', '360', 'insv', 'INSV')
     if sys.argv[1] == 'j':
         extension = jpg_extension
     elif sys.argv[1] == 'r':
@@ -147,44 +147,49 @@ def list_analysis(source_file_list, source_path_file_list, destination_file_list
             available_space = partition_usage.free/1000000000
             print('Available Space    : ' +str(round(available_space,1)) + ' GB') 
     if (total_weight/1000000000) < available_space:
-        return files_to_copy_list, path_files_to_copy_list
+        return files_to_copy_list, path_files_to_copy_list, len(files_to_copy_list)
     else:
         print("\nNot enough space on 'Backup Disk' to make Backup !")
     
-def copying(files_copy, path_files_copy, destination_names , path_destination_folder):
+def copying(files_copy, path_files_copy, destination_names, path_destination_folder, total_files):
     led_counter = 0
-    n_process = False
-    print('\ncopying files...')
-    for a in range(len(files_copy)):
-        for b in range(len(destination_names)):
-            if files_copy[a] == destination_names[b]:
+    print('\nCopying files...')
+
+    for index, file in enumerate(files_copy):
+        current_file = os.path.basename(path_files_copy[index])
+        print(f"Copying {current_file} ({index + 1}/{total_files})...")
+
+        # Calculate and display the progress percentage
+        progress_percentage = ((index + 1) / total_files) * 100
+        print(f"Progress: {progress_percentage:.2f}%")
+
+        n_process = False
+        for destination_file in destination_names:
+            if file == destination_file:
                 n_process = True
+                break
+
         if n_process:
             n = 1
-            file_name, file_extension = os.path.splitext(files_copy[a])
-            while (file_name + "_" + str(n) + file_extension) in  destination_names:
+            file_name, file_extension = os.path.splitext(file)
+            new_file_name = f"{file_name}_{n}{file_extension}"
+            while new_file_name in destination_names:
                 n += 1
-            shutil.copy2(path_files_copy[a], path_destination_folder + '/' + file_name + "_" + str(n) + file_extension)
-            destination_names.append(file_name + "_" + str(n) + file_extension)
-            if led_counter == 0:
-                GPIO.output(led_pin, False)
-                time.sleep(0.05)
-                led_counter = 1
-            else:
-                GPIO.output(led_pin, True)
-                time.sleep(0.05)
-                led_counter = 0
+                new_file_name = f"{file_name}_{n}{file_extension}"
+
+            destination_path = os.path.join(path_destination_folder, new_file_name)
+            shutil.copy2(path_files_copy[index], destination_path)
+            destination_names.append(new_file_name)
         else:
-            shutil.copy2(path_files_copy[a], path_destination_folder + '/' + files_copy[a])
-            destination_names.append(files_copy[a])
-            if led_counter == 0:
-                GPIO.output(led_pin, False)
-                time.sleep(0.05)
-                led_counter = 1
-            else:
-                GPIO.output(led_pin, True)
-                time.sleep(0.05)
-                led_counter = 0
+            destination_path = os.path.join(path_destination_folder, file)
+            shutil.copy2(path_files_copy[index], destination_path)
+            destination_names.append(file)
+
+        # Toggle LED to indicate progress
+        led_counter = (led_counter + 1) % 2
+        GPIO.output(led_pin, led_counter == 0)
+        time.sleep(0.05)
+
                 
 def sort_files_by_exif_data(path_folders_to_check):
     exif_files_counter = 0
@@ -287,11 +292,11 @@ def start_pibackup():
     print("***** PiBackup *****" + '\n')
     path_source_disk, path_destination_disk = check_connected_disks()    
     s_files, path_s_files, d_files, path_d_files = creating_file_list(path_source_disk, path_destination_disk)
-    files_to_copy, path_files_to_copy = list_analysis(s_files, path_s_files, d_files, path_d_files, path_destination_disk)
+    files_to_copy, path_files_to_copy, total_files_to_copy = list_analysis(s_files, path_s_files, d_files, path_d_files, path_destination_disk)
     if len(files_to_copy) == 0:
         print("\nNo new files to backup")
     else:
-        copying(files_to_copy, path_files_to_copy, d_files, path_destination_disk)
+        copying(files_to_copy, path_files_to_copy, d_files, path_destination_disk, total_files_to_copy)
         sort_files_by_exif_data(path_destination_disk)
         separate_files_by_extension(path_destination_disk)
         finalize(path_source_disk, path_destination_disk)
