@@ -1,26 +1,110 @@
 <html>
-    <head>
-        <font size = "6">
-        <title>{{ title }} PiBackup</title>
-        <link rel="stylesheet" href='../static/style.css'/&gt;
-        </font>
-    </head>    
-    <body>
-        <br><br>
-        <h1>PiBackup : (SD ---> SSD)</h1>
-        <a href="/" ><button class=grey style="height:70px;width:220px;font-size:48px">Home</button></a>
-        <br><br>
-        <br><br>
-        <form method="post" action="/pibackup/">
-            <input type="submit" style="height:70px;width:200px;font-size:48px" value="RAW" name="PBK_R"/>
-            <br><br>
-            <input type="submit" style="height:70px;width:200px;font-size:48px" value="JPG" name="PBK_J"/>
-            <br><br>
-            <input type="submit" style="height:70px;width:330px;font-size:48px" value="JPG+RAW" name="PBK_JR"/>
-            <br><br>
-            <input type="submit" style="height:70px;width:220px;font-size:48px" value="Video" name="PBK_V"/>
-            <br><br>
-            <input type="submit" style="height:70px;width:480px;font-size:48px" value="JPG+RAW+Video" name="PBK_JRV"/>
-        </form>
-    </body>
+<head>
+    <font size = "6">
+    <title>{{ title }} PiBackup</title>
+    <link rel="stylesheet" href='../static/style.css'/>
+    </font>
+    <script type="text/javascript">
+        var eventSource = new EventSource("/pibackup_stream");
+
+        eventSource.onmessage = function(event) {
+            var backupOutputElement = document.getElementById("backup-output");
+            backupOutputElement.textContent += event.data + '\n';
+            backupOutputElement.scrollTop = backupOutputElement.scrollHeight;
+        };
+    </script>
+</head>    
+<body>
+    <br><br>
+    <h1>PiBackup : (SD ---> SSD)</h1>
+    <a href="/" ><button class=grey style="height:70px;width:220px;font-size:48px">Home</button></a>
+    <br><br>
+    <br><br> 
+    <!-- File type selection for listing files -->
+    <div>
+        <input type="radio" id="list_jpg" name="backup_type" value="j">
+        <label for="list_jpg">JPG</label><br>
+
+        <input type="radio" id="list_raw" name="backup_type" value="r">
+        <label for="list_raw">RAW</label><br>
+
+        <input type="radio" id="list_jpg_raw" name="backup_type" value="jr" checked>
+        <label for="list_jpg_raw">JPG + RAW</label><br>
+
+        <input type="radio" id="list_video" name="backup_type" value="v">
+        <label for="list_video">Video</label><br>
+
+        <input type="radio" id="list_all" name="backup_type" value="jrv">
+        <label for="list_all">JPG + RAW + Video</label><br>
+    </div>
+
+    <button type="button" style="height:70px;width:480px;font-size:48px" onclick="checkDisks(event)">Check Disks</button>
+
+    <br><br>
+    <button type="button" style="height:70px;width:580px;font-size:48px" onclick="listFilesToCopy(event)">List Files to Copy</button>
+
+    <br><br>
+    <button type="button" style="height:70px;width:480px;font-size:48px" onclick="startBackup()">Start Backup</button>
+
+    <br><br>
+    <button type="button" style="height:70px;width:580px;font-size:48px" onclick="showLatestReport()">Show Latest Report</button>
+
+    <br><br>
+    <button type="button" style="height:70px;width:480px;font-size:48px" onclick="ejectDisks()">Eject Disks</button>
+
+    <br><br>
+    <button type="button" style="height:70px;width:320px;font-size:48px" onclick="clearOutput()">Clear Logs</button>
+    
+    <br><br>
+    <button type="button" style="height:70px;width:480px;font-size:48px" onclick="showLatestReport()">Show Latest Report</button>
+
+    <br><br>
+    <button type="button" style="height:70px;width:480px;font-size:48px" onclick="ejectDisks()">Eject Disks</button>
+    
+    <br><br>
+    <pre id="backup-output" style="white-space: pre-wrap;"></pre>
+
+    <script type="text/javascript">
+        function checkDisks(event) {
+            event.preventDefault();
+            fetch('/check_disks').then(function(response) {
+                return response.text();
+            }).then(function(text) {
+                document.getElementById('backup-output').textContent += text;
+            });
+        }
+        function listFilesToCopy(event) {
+            event.preventDefault();
+            let fileType = document.querySelector('input[name="backup_type"]:checked').value;
+            fetch(`/list_files_to_copy/${fileType}`).then(function(response) {
+                return response.text();
+            }).then(function(text) {
+                document.getElementById('backup-output').innerHTML = text;
+            });
+        }
+        function startBackup() {
+            let backupType = document.querySelector('input[name="backup_type"]:checked').value;
+            fetch(`/start_backup/${backupType}`).then(function(response) {
+                return response.text();
+            }).then(function(text) {
+                document.getElementById('backup-output').textContent = text;
+            });
+        }
+        function clearOutput() {
+            document.getElementById('backup-output').textContent = '';
+        }
+        function showLatestReport() {
+            fetch('/pibackup_report_content').then(function(response) {
+                return response.text();
+            }).then(function(text) {
+                document.getElementById('backup-output').textContent = text;
+            });
+        }
+        function ejectDisks() {
+            fetch('/eject_disks')
+            .then(response => response.text())
+            .then(text => alert(text));
+        }
+    </script>
+</body>
 </html>
