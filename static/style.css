@@ -1,8 +1,8 @@
 body {
-    background: black;
-    color: white;
+  background: black;
+  color: white;
 }
- 
+
 .button {
   font: bold 24px Arial;
   text-decoration: none;
@@ -29,6 +29,10 @@ th, td {
 th {
   background-color: #3498DB;
   color: white;
+}
+
+td {
+  color: black; /* Set table cell text color to black for contrast */
 }
 
 tr:nth-child(even) {
