@@ -307,7 +307,11 @@ def finalize(path_source_dsk, path_destination_dsk):
     time.sleep(0.5)
     os.system(command_2)
     print('\n' + "End (Disks unmounted!)")
-    
+
+def eject_disks():
+    source, destination = check_connected_disks()
+    finalize(source, destination)
+
 def start_pibackup():
     print("***** PiBackup *****" + '\n')
     path_source_disk, path_destination_disk = check_connected_disks()    

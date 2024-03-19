@@ -20,12 +20,14 @@
 
 
 from flask import Flask, render_template, request, redirect
+from flask import jsonify
 from hashlib import blake2s
 from datetime import datetime
 import RPi.GPIO as GPIO
 import exiftool, os, shutil, subprocess, sys, time, glob
 from pibackup import check_connected_disks
 from pibackup import list_files_to_copy
+from pibackup import eject_disks
 
 led_pin = 16               # 3mm Red LED in series with 2k2 resistor connected to pin 16
 GPIO.setmode(GPIO.BOARD)
@@ -37,7 +39,6 @@ app = Flask(__name__)
 def shut_down():
     time.sleep(5)
     os.system('sudo shutdown -h now')
-
 
 @app.route("/", methods=['GET', 'POST'])
 def welcome_home():
@@ -51,13 +52,17 @@ def welcome_home():
     return render_template('home.html', **templateData)
     
 def generate_backup_output(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
-    for line in iter(process.stdout.readline, ''):
-        yield f"data: {line}\n\n"
+    with open('/home/pi/PiBackup/report.log', 'wb') as f:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+        for line in iter(process.stdout.readline, ''):
+            f.write(line.encode())  # Write to log file
+            f.flush()  # Ensure the data is written to the file
+            yield f"data: {line}\n\n"  # Send data for real-time updates
 
 @app.route('/pibackup_stream')
 def pibackup_stream():
-    command = [sys.executable, '/home/pi/PiBackup/pibackup.py', 's']
+    backup_type = request.args.get('backup_type', 'j')  # Default to 'j' if not specified
+    command = [sys.executable, '/home/pi/PiBackup/pibackup.py', backup_type]
     return Response(generate_backup_output(command), mimetype='text/event-stream')
 
 @app.route('/check_disks')
@@ -77,52 +82,26 @@ def list_files_to_copy_route(file_type):
 
 @app.route("/pibackup/", methods=['GET', 'POST'])
 def pi_backup():
-    templateData = {      'title' : 'Richon -',      }
-    print("PiBackup")
+    templateData = {'title': 'Richon -'}
     if request.method == 'POST':
+        # Determine the backup type based on the user's selection
+        backup_type = None
         if request.form.get('PBK_J') == 'JPG':
-            print("Pibackup only JPG")
-            with open('/home/pi/PiBackup/report.log', 'wb') as f:
-                process = subprocess.Popen([sys.executable, '/home/pi/PiBackup/pibackup.py','j'], stdout = subprocess.PIPE)
-                for line in process.stdout:
-#                     sys.stdout.write(str(line) + '\n')
-                    f.write(line)
-            f.close()
+            backup_type = 'j'
         elif request.form.get('PBK_R') == 'RAW':
-            print("Pibackup only RAW")
-            with open('/home/pi/PiBackup/report.log', 'wb') as f:
-                process = subprocess.Popen([sys.executable, '/home/pi/PiBackup/pibackup.py','r'], stdout = subprocess.PIPE)
-                for line in process.stdout:
-#                     sys.stdout.write(str(line) + '\n')
-                    f.write(line)
-            f.close()
+            backup_type = 'r'
         elif request.form.get('PBK_JR') == 'JPG+RAW':
-            print("Pibackup JPG + RAW")
-            with open('/home/pi/PiBackup/report.log', 'wb') as f:
-                process = subprocess.Popen([sys.executable, '/home/pi/PiBackup/pibackup.py','jr'], stdout = subprocess.PIPE)
-                for line in process.stdout:
-#                     sys.stdout.write(str(line) + '\n')
-                    f.write(line)
-            f.close()
+            backup_type = 'jr'
         elif request.form.get('PBK_V') == 'Video':
-            print("Pibackup Video")
-            with open('/home/pi/PiBackup/report.log', 'wb') as f:
-                process = subprocess.Popen([sys.executable, '/home/pi/PiBackup/pibackup.py','v'], stdout = subprocess.PIPE)
-                for line in process.stdout:
-#                     sys.stdout.write(str(line) + '\n')
-                    f.write(line)
-            f.close()
+            backup_type = 'v'
         elif request.form.get('PBK_JRV') == 'JPG+RAW+Video':
-            print("Pibackup JPG + RAW + Video")
-            with open('/home/pi/PiBackup/report.log', 'wb') as f:
-                process = subprocess.Popen([sys.executable, '/home/pi/PiBackup/pibackup.py','jrv'], stdout = subprocess.PIPE)
-                for line in process.stdout:
-#                     sys.stdout.write(str(line) + '\n')
-                    f.write(line)
-            f.close()
-        return redirect('/pibackup_report/')
-    return render_template('pibackup.html', **templateData)
+            backup_type = 'jrv'
 
+        if backup_type:
+            # Redirect to the streaming endpoint with the backup type as a parameter
+            return redirect(url_for('pibackup_stream', backup_type=backup_type))
+    
+    return render_template('pibackup.html', **templateData)
 
 @app.route("/piclone/", methods=['GET', 'POST'])
 def pi_clone():
@@ -306,6 +285,19 @@ def pi_report():
     report.close
     return render_template('pibackup_report.html', **templateData, n = muestra )
 
+@app.route("/pibackup_report_content")
+def pibackup_report_content():
+    with open('/home/pi/PiBackup/report.log', 'r') as report:
+        content = report.read()
+    return content
 
+@app.route('/eject_disks')
+def eject_disks_route():
+    try:
+        eject_disks()
+        return jsonify({"message": "Disks successfully ejected."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
 if __name__ == "__main__":
     app.run(host= '192.168.100.1', port=5000, debug=True)
